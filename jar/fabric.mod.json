@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "litematerials",
+	"version": "0.1.0",
+	"name": "LiteMaterials",
+	"description": "Shift + Middle Click a schematic block to toggle it in the materials pick list and show green border when enough items are in inventory.",
+	"authors": [
+		"You"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/litematerials/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.example.ExampleMod"
+		],
+		"client": [
+			"com.example.ExampleModClient"
+		]
+	},
+	"mixins": [
+		"modid.mixins.json",
+		{
+			"config": "modid.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
