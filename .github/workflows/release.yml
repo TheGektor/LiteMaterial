@@ -1,0 +1,76 @@
+name: Release LiteMaterials
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g., v0.1.0)"
+        required: true
+        default: v0.1.0
+      branch:
+        description: "Release branch name"
+        required: true
+        default: release/v0.1.0
+      commit_message:
+        description: "Commit message"
+        required: false
+        default: "chore(release): bump version to ${{ github.event.inputs.version }}"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Update version in gradle.properties
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          VERSION_STR="${VERSION#v}"
+          sed -i "s/^mod_version=.*/mod_version=${VERSION_STR}/" gradle.properties
+
+      - name: Create release branch and commit
+        run: |
+          BR="${{ github.event.inputs.branch }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BR"
+          git add -A
+          git commit -m "${{ github.event.inputs.commit_message }}" || echo "No changes to commit"
+
+      - name: Build
+        run: ./gradlew --no-daemon build
+
+      - name: Tag
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          git tag -f "$VERSION"
+
+      - name: Push branch and tag
+        run: |
+          BR="${{ github.event.inputs.branch }}"
+          VERSION="${{ github.event.inputs.version }}"
+          git push --set-upstream origin "$BR"
+          git push -f origin "$VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.version }}
+          files: build/libs/*.jar
+          generate_release_notes: true
